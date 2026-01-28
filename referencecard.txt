@@ -1,0 +1,83 @@
+K (ngn/k) – Mini Reference Card (what I use)
+
+General ideas
+- Everything in K is an array, even single numbers
+- Code runs right to left, not left to right
+- The same symbol can mean different things depending on how many arguments it has
+- There are no normal loops or if statements, everything is expressions
+
+Variables
+a:5
+b:10
+a+b
+
+Functions
+f:{x+1}
+f 3          / returns 4
+
+g:{x*y}
+g[3;4]       / returns 12
+
+Monadic verbs (one input)
+-x      makes a number negative
+*x      gets the first element
+#x      counts how many items
+|x      reverses a list
+%x      square root
+!x      creates numbers from 0 to x-1
+,x      puts something into a list
+^x      checks for null
+$x      turns something into a string
+@x      tells you the type
+
+Examples
+*1 2 3        / 1
+#"abc"        / 3
+|"abc"        / "cba"
+!5            / 0 1 2 3 4
+
+Dyadic verbs (two inputs)
+x+y     add
+x-y     subtract
+x*y     multiply
+x%y     divide
+x<y     less than
+x>y     greater than
+x=y     check equality
+x,y     join lists
+x#y     reshape
+x_y     drop items
+x$y     cast
+x?y     find position
+
+Examples
+2+3           / 5
+3*4           / 12
+1 2,3 4       / 1 2 3 4
+2_"abcd"      / "cd"
+
+Adverbs (operate on functions)
+'   apply to each item
+/   fold (reduce)
+\   scan (running total)
+
+Examples
+1 2 3 +' 10   / 11 12 13
++/1 2 3       / 6
++\1 2 3       / 1 3 6
+
+Conditionals
+$[condition; value if true; value if false]
+
+Example
+$[x>5;1;0]
+
+Indexing
+a:10 20 30
+a 1           / 20
+
+Things I keep using
++/x   sum a list
+#x    count items
+f' x  apply function to a list
+!n    generate a range
