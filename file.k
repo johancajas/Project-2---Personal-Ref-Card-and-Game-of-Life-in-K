@@ -8,7 +8,7 @@ rotate:{[k;l]l@((#l)!(-k)+!#l)}
 rotate2d:{[j;k;m](rotate[j]')rotate[k]'m}
 
 / neighborhoodCounts: count live neighbors for each cell
-neighborhoodCounts:{[board]shifts:(-1 -1;-1 0;-1 1;0 -1;0 1;1 -1;1 0;1 1);+/(rotate2d[x 0;x 1;board]')shifts}
+neighborhoodCounts:{[board]shifts:(-1 -1;-1 0;-1 1;0 -1;0 1;1 -1;1 0;1 1);+/{rotate2d[x 0;x 1;board]}'shifts}
 
 / nextGeneration: apply Game of Life rules
 nextGeneration:{[board]counts:neighborhoodCounts[board];(counts=3)|board&counts=2}
@@ -40,6 +40,3 @@ demo[]
 
 / Run all tests
 runTests[]
-
-
-
