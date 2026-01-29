@@ -1,110 +1,45 @@
-/ Johan Cajas
-/ (put today’s date)
-/ Project 2: Ref Card + Game of Life in ngn/k
+/ Conway's Game of Life in ngn/k
+/ Array-based implementation with wraparound edges
 
-print:{`0:x;}
-printLines:{[lines]print "\n"/lines;}
+/ rotate: rotate list by k positions
+rotate:{[k;l]l@((#l)!(-k)+!#l)}
+
+/ rotate2d: rotate a 2d matrix - rows by j, columns by k
+rotate2d:{[j;k;m](rotate[j]')rotate[k]'m}
+
+/ neighborhoodCounts: count live neighbors for each cell
+neighborhoodCounts:{[board]shifts:(-1 -1;-1 0;-1 1;0 -1;0 1;1 -1;1 0;1 1);+/(rotate2d[x 0;x 1;board]')shifts}
+
+/ nextGeneration: apply Game of Life rules
+nextGeneration:{[board]counts:neighborhoodCounts[board];(counts=3)|board&counts=2}
+
+/ simulateGameOfLife: run n generations
+simulateGameOfLife:{[n;board]n nextGeneration/board}
+
+/ makeGliderBoard: create board with a glider pattern
+makeGliderBoard:{[rows;cols]b:(rows;cols)#0;b[1;2]:1;b[2;3]:1;b[3;1]:1;b[3;2]:1;b[3;3]:1;b}
+
+/ showBoard: display board with . and * characters
+showBoard:{[board]`0:'{"*."x}'board}
+
+/ Test tracking
 testsPassed:0
 testsFailed:0
-recordPass:{."testsPassed:testsPassed+1"}
-recordFail:{."testsFailed:testsFailed+1"}
-currentTest:{`k@."testsPassed+testsFailed"}
-summarizeTestResults:{printLines[("\nTest Results:";"\tPassed: ",`k@."testsPassed";"\tFailed: ",`k@."testsFailed";"")]}
 
-is:{[expected;observed]
-  $[expected~observed;
-    recordPass[];
-    recordFail[];
-    printLines(("";"\tAssertion ";currentTest[];" failed:";"\tExpected: ",`k@expected;"\tBut was:  ",`k@observed;""))]
-}
+/ assertEqual: check if two values are equal
+assertEqual:{[expected;actual;testName]result:expected~actual;$[result;[testsPassed::testsPassed+1;`0:"✓ ",testName];[testsFailed::testsFailed+1;`0:"✗ ",testName]];result}
 
-/ -------- helpers --------
-blankBoard:{[r;c] r#(c#0)}
-setCells:{[b;coords] b {@[x;y;:;1]}/ coords}
+/ Run all tests
+runTests:{[]testsPassed::0;testsFailed::0;`0:"Running Game of Life Tests...";`0:"";assertEqual[3 4 5 1 2;rotate[-2;1 2 3 4 5];"rotate: shift last 2 to front"];assertEqual[4 5 1 2 3;rotate[2;1 2 3 4 5];"rotate: shift by positive 2"];assertEqual[1 2 3;rotate[0;1 2 3];"rotate: no rotation"];assertEqual[3 1 2;rotate[-1;1 2 3];"rotate: shift last 1 to front"];m:(1 2 3;4 5 6;7 8 9);expected:(6 4 5;9 7 8;3 1 2);assertEqual[expected;rotate2d[-1;-1;m];"rotate2d: rotate rows and cols by -1"];assertEqual[m;rotate2d[0;0;m];"rotate2d: no rotation"];board3x3:(0 0 0;0 1 0;0 0 0);counts3x3:neighborhoodCounts[board3x3];assertEqual[1;counts3x3[0;0];"neighborhoodCounts: corner counts center"];assertEqual[1;counts3x3[1;1];"neighborhoodCounts: center counts itself via wrap"];blinker:(0 0 0 0 0;0 0 1 0 0;0 0 1 0 0;0 0 1 0 0;0 0 0 0 0);counts:neighborhoodCounts[blinker];assertEqual[2;counts[2;2];"neighborhoodCounts: blinker center has 2 neighbors"];assertEqual[1;counts[1;2];"neighborhoodCounts: blinker end has 1 neighbor"];glider:makeGliderBoard[7;7];assertEqual[1;glider[1;2];"makeGliderBoard: glider position [1,2]"];assertEqual[1;glider[2;3];"makeGliderBoard: glider position [2,3]"];assertEqual[1;glider[3;1];"makeGliderBoard: glider position [3,1]"];assertEqual[5;+/+/glider;"makeGliderBoard: glider has exactly 5 live cells"];blinkerH:(0 0 0 0 0;0 0 1 0 0;0 0 1 0 0;0 0 1 0 0;0 0 0 0 0);blinkerV:(0 0 0 0 0;0 0 0 0 0;0 1 1 1 0;0 0 0 0 0;0 0 0 0 0);assertEqual[blinkerV;nextGeneration[blinkerH];"nextGeneration: blinker horizontal to vertical"];assertEqual[blinkerH;nextGeneration[blinkerV];"nextGeneration: blinker vertical to horizontal"];assertEqual[blinkerH;simulateGameOfLife[2;blinkerH];"simulateGameOfLife: blinker period 2"];assertEqual[blinkerH;simulateGameOfLife[100;blinkerH];"simulateGameOfLife: blinker stable over 100 even gens"];block:(0 0 0 0;0 1 1 0;0 1 1 0;0 0 0 0);assertEqual[block;simulateGameOfLife[1;block];"simulateGameOfLife: block stable after 1 gen"];assertEqual[block;simulateGameOfLife[10;block];"simulateGameOfLife: block stable after 10 gens"];`0:"";`0:"==========================================";`0:"TEST SUMMARY";`0:"==========================================";`0:"Passed: ",$testsPassed;`0:"Failed: ",$testsFailed;`0:"Total:  ",$(testsPassed+testsFailed);$[testsFailed=0;`0:"✓ ALL TESTS PASSED!";`0:"✗ SOME TESTS FAILED"];`0:"==========================================" }
 
-/ rotate: move last k items to the front
-rotate:{[k;x]
-  n:#x;
-  k:n!(k+n);          / normalize (works for negatives too)
-  (n-k)_x,(n-k)#x
-}
+/ Main demonstration
+demo:{[]`0:"==========================================";`0:"Conway's Game of Life - Glider on 7x7 Board";`0:"==========================================";`0:"";board:makeGliderBoard[7;7];`0:"Initial Board (Generation 0):";showBoard[board];`0:"";finalBoard:simulateGameOfLife[100;board];`0:"Final Board (Generation 100):";showBoard[finalBoard];`0:"";`0:"(Glider has moved due to wraparound on edges)";`0:"" }
 
-/ rotate2d: rotate each row by k, then rotate rows by j
-rotate2d:{[j;k;m]
-  rotate[j; {rotate[k;x]}'m]
-}
+/ Run demonstration
+demo[]
 
-/ neighborhoodCounts: count live neighbors with wrap-around
-neighborhoodCounts:{[b]
-  shifts:(-1 -1;-1 0;-1 1;0 -1;0 0;0 1;1 -1;1 0;1 1);
-  all:+/{rotate2d[x@0;x@1;b]}'shifts;   / sum 9 shifted boards (includes self)
-  all-b                                 / remove self to get only neighbors
-}
+/ Run all tests
+runTests[]
 
-/ makeGliderBoard: create r x c with one glider at top-left
-makeGliderBoard:{[r;c]
-  b:blankBoard[r;c];
-  coords:(0 1;1 2;2 0;2 1;2 2);
-  setCells[b;coords]
-}
 
-/ one generation step
-step:{[b]
-  n:neighborhoodCounts b;
-  alive:1=b;
-  (alive & ((2=n)|(3=n))) | ((~alive) & (3=n))
-}
 
-/ simulateGameOfLife: run gens steps starting from board
-simulateGameOfLife:{[gens;b] gens step/ b}
-
-/ pretty-print board (0 -> . , 1 -> #)
-rowToStr:{""/(".";"#")@x}
-boardToLines:{rowToStr' x}
-printBoard:{[b] printLines[boardToLines b]}
-
-/ ----------- TESTS -----------
-
-/ rotate tests
-is[4 1 2 3][rotate[1;1 2 3 4]]
-is[3 4 1 2][rotate[2;1 2 3 4]]
-is[1 2 3 4][rotate[0;1 2 3 4]]
-is[2 3 4 1][rotate[-1;1 2 3 4]]
-
-/ rotate2d tests
-m:(1 2 3;4 5 6;7 8 9);
-is[(9 7 8;3 1 2;6 4 5)][rotate2d[1;1;m]]
-is[m][rotate2d[0;0;m]]
-
-/ neighborhoodCounts tests
-b1:(0 0 0;0 1 0;0 0 0);
-is[(1 1 1;1 0 1;1 1 1)][neighborhoodCounts b1]
-b0:(0 0 0;0 0 0;0 0 0);
-is[b0][neighborhoodCounts b0]
-
-/ makeGliderBoard test (5x5)
-g5:makeGliderBoard[5;5];
-g5Expected:(0 1 0 0 0;
-            0 0 1 0 0;
-            1 1 1 0 0;
-            0 0 0 0 0;
-            0 0 0 0 0);
-is[g5Expected][g5]
-
-/ simulateGameOfLife test: glider moves down-right by 1 every 4 gens
-g7:makeGliderBoard[7;7];
-g7After4:simulateGameOfLife[4;g7];
-g7After4Expected:blankBoard[7;7];
-g7After4Expected:setCells[g7After4Expected;(1 2;2 3;3 1;3 2;3 3)];
-is[g7After4Expected][g7After4]
-
-/ ----------- RUN DEMO (for screenshot) -----------
-printLines[("Initial 7x7 glider board:";"")]
-bStart:makeGliderBoard[7;7];
-printBoard bStart
-
-bFinal:simulateGameOfLife[100;bStart];
-printLines[("" ;"Final board after 100 generations:";"")]
-printBoard bFinal
-
-summarizeTestResults[]
