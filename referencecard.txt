@@ -1,83 +1,57 @@
-K (ngn/k) – Mini Reference Card (what I use)
+Johan Cajas - Game of Life (K)
+ngn/K — Mini Reference Card (concise)
+-----------------------------------
 
-General ideas
-- Everything in K is an array, even single numbers
-- Code runs right to left, not left to right
-- The same symbol can mean different things depending on how many arguments it has
-- There are no normal loops or if statements, everything is expressions
+Essence
+- Arrays are first-class: scalars, lists, matrices are arrays.
+- Verbs = functions; they are monadic (one-arg) or dyadic (two-arg).
+- Composition and point-free style are common; avoid explicit loops.
 
-Variables
-a:5
-b:10
-a+b
+Syntax basics
+- Define verbs: `f:{[args] body}` or `f:{body}`.
+- Apply: monad `f x` or `f[x]`; dyad `x f y` or `f[x;y]`.
+- Lists: `1 2 3`; matrices: `1 2;3 4` (rows separated by `;`).
+- Indexing: `a[i]` or `a[i;j]` for elements.
 
-Functions
-f:{x+1}
-f 3          / returns 4
+useful monadic verbs 
+- `-x`    : negate
+- `~x`    : logical NOT / complement
+- `#x`    : count / shape
+- `!x`    : range/enumerate
+- `,x`    : enlist / wrap in list
+- `'x`    : each (map) when used as adverb
+- `|x`    : absolute / sign-or-reverse (dialect)
+- `$x`    : format/cast to string
+- `^x`    : exponent unary (dialect) / other unary op
+- `@x`    : type/query (dialect)
 
-g:{x*y}
-g[3;4]       / returns 12
+useful dyadic verbs 
+- `x+y`   : add
+- `x-y`   : subtract
+- `x*y`   : multiply
+- `x%y`   : divide
+- `x=y`   : equal (element-wise)
+- `x<y`   : less-than
+- `x>y`   : greater-than
+- `x,y`   : join/concatenate
+- `x#y`   : reshape / take
+- `x!y`   : rotate/take/enumerate (dialect-dependent)
 
-Monadic verbs (one input)
--x      makes a number negative
-*x      gets the first element
-#x      counts how many items
-|x      reverses a list
-%x      square root
-!x      creates numbers from 0 to x-1
-,x      puts something into a list
-^x      checks for null
-$x      turns something into a string
-@x      tells you the type
+Adverbs
+- `'`  (each) : apply a verb to each element (map)
+- `/`  (reduce): fold a verb across a list (sum, product)
+- `\` (scan) : prefix running results (partial reductions)
 
-Examples
-*1 2 3        / 1
-#"abc"        / 3
-|"abc"        / "cba"
-!5            / 0 1 2 3 4
+Common idioms
+- Rotation: `rot:{[k;x] n:#x; k:k!n; (k_x),k#x}` and 2D via rank-apply
+  `rot2d:{[r;c;m] rot[c]'rot[r]'m}`.
+- Neighbors: sum 8 shifted boards with `rot2d` and add element-wise.
+- Game of Life rule: `(n=3) | b & n=2` (birth if 3, survive if 2+and alive).
+- Simulation: `sim:{[n;b] n next/b}` applies `next` n times.
 
-Dyadic verbs (two inputs)
-x+y     add
-x-y     subtract
-x*y     multiply
-x%y     divide
-x<y     less than
-x>y     greater than
-x=y     check equality
-x,y     join lists
-x#y     reshape
-x_y     drop items
-x$y     cast
-x?y     find position
+Quick examples
+- Define: `f:{x+1}` then `f 3` ⇒ 4
+- Map: `inc:{x+1}` then `inc' 1 2 3` ⇒ 2 3 4
+- Reduce sum: `+/ 1 2 3` ⇒ 6
 
-Examples
-2+3           / 5
-3*4           / 12
-1 2,3 4       / 1 2 3 4
-2_"abcd"      / "cd"
 
-Adverbs (operate on functions)
-'   apply to each item
-/   fold (reduce)
-\   scan (running total)
-
-Examples
-1 2 3 +' 10   / 11 12 13
-+/1 2 3       / 6
-+\1 2 3       / 1 3 6
-
-Conditionals
-$[condition; value if true; value if false]
-
-Example
-$[x>5;1;0]
-
-Indexing
-a:10 20 30
-a 1           / 20
-
-Things I keep using
-+/x   sum a list
-#x    count items
-f' x  apply function to a list
-!n    generate a range

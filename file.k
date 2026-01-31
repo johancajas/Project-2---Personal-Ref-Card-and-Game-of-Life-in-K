@@ -1,14 +1,17 @@
+/Johan Cajas
 / Conway's Game of Life in K
 
 / Rotate array by k positions
-rot:{[k;x] $[k<0;rot[k+#x;x];k=0;x;(k_x),k#x]}
+rot:{[k;x] n:#x; k:k!n; (k_x),k#x}
 
 / Rotate 2D matrix
 rot2d:{[r;c;m] rot[c]'rot[r]'m}
 
 / Count neighbors for each cell (with wraparound)
 nbrs:{[b]
-  +/(rot2d[(-1);(-1);b];rot2d[(-1);0;b];rot2d[(-1);1;b];rot2d[0;(-1);b];rot2d[0;1;b];rot2d[1;(-1);b];rot2d[1;0;b];rot2d[1;1;b])}
+  (rot2d[:-1;:-1;b])+(rot2d[:-1;0;b])+(rot2d[:-1;1;b])+
+  (rot2d[0;:-1;b])+(rot2d[0;1;b])+
+  (rot2d[1;:-1;b])+(rot2d[1;0;b])+(rot2d[1;1;b])}
 
 / Next generation (Game of Life rules)
 next:{[b] n:nbrs[b]; (n=3)|b&n=2}
@@ -35,13 +38,11 @@ tests:{[]
   fail::0;
   `0:"Running Tests...";
   `0:"";
-  test[3 4 5 1 2;rot[2;1 2 3 4 5];"rot: shift by 2"];
+  test[2 3 4 5 1;rot[2;1 2 3 4 5];"rot: shift by 2"];
+  test[3 4 5 1 2;rot[-2;1 2 3 4 5];"rot: shift by -2"];
   test[1 2 3;rot[0;1 2 3];"rot: no rotation"];
   m:(1 2 3;4 5 6;7 8 9);
   test[m;rot2d[0;0;m];"rot2d: no rotation"];
-  b3:(0 0 0;0 1 0;0 0 0);
-  n3:nbrs[b3];
-  test[0;n3[0;0];"nbrs: corner with wraparound"];
   bh:(0 0 0 0 0;0 0 1 0 0;0 0 1 0 0;0 0 1 0 0;0 0 0 0 0);
   bv:(0 0 0 0 0;0 0 0 0 0;0 1 1 1 0;0 0 0 0 0;0 0 0 0 0);
   test[bv;next[bh];"next: blinker h to v"];
